@@ -49,6 +49,9 @@ On the Satellite server:
    - `satellite_org_label` - (applicable to install only) Label of the Satellite Organization to which the capsule needs to be registered.
    - `satellite_activation_key` - (applicable to install only) Activation key of the Satellite Organization to which the capsule needs to be registered.
    - `skip_katello_agent` - (applicable to install only) Set to true to not install katello-agent. (defaults to false)
+   - `satellite_hostname` -  Enter the hostname of the Satellite Server which the capsule will be configured to.
+   - `tower_install` - Set to true if this playbook will run on Ansible Tower.
+   - `ansible_install` - Set to true if this playbook will run on Vanilla Ansible from the Satellite server.
 
 5. Update `inventory` file with the capsule(s) hostname(s).
 
