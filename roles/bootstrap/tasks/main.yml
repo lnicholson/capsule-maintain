@@ -3,8 +3,12 @@
   command: hostname
   register: hostname
   delegate_to: localhost
+  when: ansible_install
+
 - set_fact:
     satellite_hostname: "{{ hostname.stdout }}"
+  when: ansible_install
+  
 - name: Get bootstrap.py
   get_url:
     url: http://{{ satellite_hostname }}/pub/bootstrap.py
