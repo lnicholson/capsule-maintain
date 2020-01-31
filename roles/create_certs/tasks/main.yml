@@ -6,6 +6,16 @@
     mode: 0744
   delegate_to: localhost
   run_once: true
+  when: ansible_install
+  
+- name: Create /certs directory on satellite
+  file:
+    path: /certs
+    state: directory
+    mode: 0744
+  delegate_to: "{{ satellite_hostname }}"
+  run_once: true
+  when: tower_install
 
 - name: Create /certs directory on capsule
   file:
@@ -23,6 +33,17 @@
       >/certs/{{ inventory_hostname }}-out.raw
   delegate_to: localhost
   when: capsule_install
+  
+- name: Create capsule certs on satellite for capsule install
+  shell:
+      capsule-certs-generate
+      --foreman-proxy-fqdn {{ inventory_hostname }}
+      --certs-tar /certs/{{ inventory_hostname }}-certs.tar
+      --foreman-proxy-cname "{{ capsule_cname if capsule_cname != 'none' else '' }}"
+      --cname "{{ capsule_cname if capsule_cname != 'none' else '' }}"
+      >/certs/{{ inventory_hostname }}-out.raw
+  delegate_to: "{{ satellite_hostname }}"
+  when: capsule_install and tower_install
 
 - name: Copy the required certs to the capsule
   copy:
@@ -32,6 +53,23 @@
     group: root
     mode: 0744
     backup: yes
+  when: ansible_install
+    
+- name: Fetch the certs from Satellite to the Tower Buffer
+  fetch: 
+    src: /certs/{{ inventory_hostname }}-certs.tar
+    dest: buffer/ flat=yes
+  when: tower_install
+  
+- name: Copy the required certs to the capsule
+  copy:
+    src: buffer/certs/{{ inventory_hostname }}-certs.tar
+    dest: /certs/
+    owner: root
+    group: root
+    mode: 0744
+    backup: yes
+  when: capsule_install and tower_install
 
 - name: Copy the installer command to the capsule for capsule install
   copy:
@@ -42,6 +80,22 @@
     mode: 0744
     backup: yes
   when: capsule_install
+
+- name: Fetch the installer from Satellite to the Tower Buffer
+  fetch: 
+    src: /certs/{{ inventory_hostname }}-out.raw
+    dest: buffer/ flat=yes
+  when: tower_install
+  
+- name: Copy the installer command to the capsule for capsule install
+  copy:
+    src: buffer/certs/{{ inventory_hostname }}-out.raw
+    dest: /certs/
+    owner: root
+    group: root
+    mode: 0744
+    backup: yes
+  when: capsule_install and tower_install
 
 # Extract the capsule install command using regex until RFE BZ 1573374 is fixed.
 - name: Extract the capsule-installer command for capsule install
