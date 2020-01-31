@@ -6,7 +6,6 @@
     capsule_install: true
     tower_install: true
     capsule_upgrade: false
-  remote_user: root
   roles:
   - create_certs
   - bootstrap
